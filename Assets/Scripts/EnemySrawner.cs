@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Pool;
+using System.Collections;
 
 public class EnemySrawner : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class EnemySrawner : MonoBehaviour
     {
         _pool = new ObjectPool<Enemy>(
             createFunc: () => Instantiate(_enemyPrefab),
-            actionOnGet: (enemy) => ActionOnGet(enemy),
+            actionOnGet: (enemy) => Spawn(enemy),
             actionOnRelease: (enemy) => enemy.gameObject.SetActive(false),
             actionOnDestroy: (enemy) => Destroy(enemy.gameObject),
             collectionCheck: true,
@@ -27,7 +28,7 @@ public class EnemySrawner : MonoBehaviour
 
     private void Start()
     {
-        InvokeRepeating(nameof(GetEnemy), 0.5f, _spawnTime);
+        StartCoroutine(StartRepeatSpawn(_spawnTime));
     }
 
     private void GetEnemy()
@@ -35,7 +36,7 @@ public class EnemySrawner : MonoBehaviour
         _pool.Get();
     }
 
-    private void ActionOnGet(Enemy enemy)
+    private void Spawn(Enemy enemy)
     {
         Vector3 spawnPosition = _spawnPoint.position;
 
@@ -49,5 +50,14 @@ public class EnemySrawner : MonoBehaviour
     {
         enemy.Fell -= ReleaseEnemy;
         _pool.Release(enemy);
+    }
+
+    private IEnumerator StartRepeatSpawn(float time)
+    {
+        while (enabled)
+        {
+            yield return new WaitForSeconds(time);
+            GetEnemy();
+        }
     }
 }
